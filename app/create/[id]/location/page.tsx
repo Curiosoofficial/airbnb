@@ -1,12 +1,16 @@
+"use client"
+import CreationBottomBar from "@/components/CreationBottomBar"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { createLocationPage } from "@/lib/actions/actions"
 import { useCountries } from "@/lib/getCountries"
 import dynamic from "next/dynamic"
-import React from 'react'
+import React, { useState } from 'react'
 
-const page = () => {
+const Page = ({params}: {params: {id: string}}) => {
   
   const { getAllCountries } = useCountries()
+  const [locationValue, setLocationValue] = useState("") 
 
   const LazyMap = dynamic(() => import("@/components/Map"), {ssr: false, loading: () => <Skeleton className="h-[50vh] w-full"/>})
 
@@ -18,10 +22,12 @@ const page = () => {
         </h2>
       </div>
 
-      <form action="">
-        <div className="w-3/5 mx-auto">
+      <form action={createLocationPage}>
+        <input type="hidden" name="homeId" value={params.id}/>
+        <input type="hidden" name="countryValue" value={locationValue}/>
+        <div className="w-3/5 mx-auto mb-36">
           <div className="mb-5">
-            <Select required>
+            <Select required onValueChange={(value) => setLocationValue(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a country"/>
               </SelectTrigger>
@@ -39,11 +45,13 @@ const page = () => {
             </Select>
           </div>
 
-          <LazyMap />
+          <LazyMap locationValue={locationValue}/>
         </div>
+
+        <CreationBottomBar />
       </form>
     </>
   )
 }
 
-export default page
+export default Page
