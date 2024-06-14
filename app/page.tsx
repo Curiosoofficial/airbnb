@@ -3,11 +3,14 @@ import MapFilterItems from "@/components/MapFilterItems";
 import NoItems from "@/components/NoItems";
 import SkeletonHome from "@/components/SkeletonHome";
 import prisma from "@/db/db";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Suspense } from "react";
 
 async function getData({
   searchParams,
+  userId
 }: {
+  userId: string | undefined,
   searchParams?: {
     filter?: string;
   };
@@ -25,6 +28,11 @@ async function getData({
       price: true,
       description: true,
       country: true,
+      Favorite: {
+        where: {
+          userId: userId ?? undefined,
+        },
+      }
     },
   });
 
@@ -56,7 +64,9 @@ async function ShowItems({
     filter?: string;
   };
 }) {
-  const data = await getData({ searchParams: searchParams });
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+  const data = await getData({ searchParams: searchParams, userId: user?.id });
 
   return (
     <>
@@ -71,6 +81,11 @@ async function ShowItems({
             imagePath={item.photo as string}
             location={item.country as string}
             price={item.price as number}
+            userId={user?.id}
+            favoriteId={item.Favorite[0]?.id}
+            isInFavoriteList={item.Favorite.length > 0 ? true : false}
+            homeId={item.id}
+            pathName="/"
           />
         ))}
       </div>
