@@ -65,7 +65,7 @@ const ListingCard = ({
       </div>
 
 
-      <Link href={"/"}>
+      <Link href={`/home/${homeId}`}>
         <h3 className="font-medium text-base">{country?.flag} {country?.label}</h3>
         <p className="text-muted-foreground text-sm line-clamp-2">{description}</p>
         <p className="pt-2 text-muted-foreground"><span className="font-medium text-black">${price}</span> / Night</p>
