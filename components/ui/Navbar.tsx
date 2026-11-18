@@ -5,7 +5,7 @@ import UserNav from "../UserNav";
 
 const Navbar = () => {
   return (
-    <nav className="w.full border-b">
+    <nav className="w-full border-b">
       <div className="flex items-center justify-between container mx-auto p-5 lg:px-10">
         <Link href="/">
           <Image
@@ -25,9 +25,8 @@ const Navbar = () => {
           />
         </Link>
 
-        <div className="rounded-full border px-5 py-2">
-            Hello from search
-        </div>
+        {/* Hier stand ein Platzhalter "Hello from search". Die Suche ist
+            im Tutorial-Stand nicht umgesetzt, darum ist er entfernt. */}
 
         <UserNav />
       </div>

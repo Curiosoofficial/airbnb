@@ -4,6 +4,10 @@ import Image from "next/image";
 
 const CategoryShowcase = ({categoryName}: {categoryName: string}) => {
     const category = categoryItems.find((item) => item.name === categoryName);
+
+    // Ohne gültige Kategorie hätte next/image kein `src` und die Seite crasht
+    if (!category) return null;
+
   return (
     <div className="flex items-center">
         <Image 

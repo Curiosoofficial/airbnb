@@ -38,7 +38,7 @@ const page = ({params}: {params: {id: string}}) => {
 
             <div className="flex flex-col gap-y-2">
               <Label>Image</Label>
-              <Input name="image" type="file" required />
+              <Input name="image" type="file" accept="image/*" required />
             </div>
 
             <Card>

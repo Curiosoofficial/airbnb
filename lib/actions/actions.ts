@@ -1,11 +1,30 @@
 "use server";
 
 import prisma from "@/db/db";
-import { supabase } from "@/db/supabase";
+import { getSupabase } from "@/db/supabase";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export async function createAirbnbHome({ userId }: { userId: string }) {
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // Vercel erlaubt max. 4.5 MB pro Request
+
+// Server Actions sind öffentliche Endpunkte: Jeder kann sie mit beliebigen
+// Formulardaten aufrufen. Deshalb kommt die User-ID immer aus der Session,
+// nie aus einem (manipulierbaren) Formularfeld.
+async function requireUserId() {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user?.id) {
+    redirect("/api/auth/login");
+  }
+
+  return user.id;
+}
+
+export async function createAirbnbHome() {
+  const userId = await requireUserId();
+
   const data = await prisma.home.findFirst({
     where: {
       userId: userId,
@@ -49,12 +68,20 @@ export async function createAirbnbHome({ userId }: { userId: string }) {
 }
 
 export async function createCategoryPage(formData: FormData) {
+  const userId = await requireUserId();
   const categoryName = formData.get("categoryName") as string;
   const homeId = formData.get("homeId") as string;
 
-  const data = await prisma.home.update({
+  // Ohne gewählte Kategorie zurück zum Schritt (sonst crasht später die Detailseite)
+  if (!categoryName) {
+    return redirect(`/create/${homeId}/structure`);
+  }
+
+  // `userId` im where: Nur der Besitzer darf sein Inserat bearbeiten
+  await prisma.home.update({
     where: {
       id: homeId,
+      userId: userId,
     },
     data: {
       categoryName: categoryName,
@@ -66,39 +93,52 @@ export async function createCategoryPage(formData: FormData) {
 }
 
 export async function createDescriptionPage(formData: FormData) {
+  const userId = await requireUserId();
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const price = formData.get("price");
-  const imageFile = formData.get("image") as File;
+  const imageFile = formData.get("image") as File | null;
   const guestNumber = formData.get("guest") as string;
   const roomNumber = formData.get("room") as string;
   const bathroomNumber = formData.get("bathroom") as string;
   const homeId = formData.get("homeId") as string;
 
-  if (!imageFile) {
-    throw new Error("Image file is not provided.");
+  if (!imageFile || imageFile.size === 0) {
+    throw new Error("Bitte ein Bild auswählen.");
   }
 
-  const { data: imageData, error: uploadError } = await supabase.storage
-    .from("images")
-    .upload(`${imageFile.name}-${new Date().toISOString()}`, imageFile, {
+  if (!imageFile.type.startsWith("image/")) {
+    throw new Error("Die Datei ist kein Bild.");
+  }
+
+  if (imageFile.size > MAX_IMAGE_BYTES) {
+    throw new Error("Das Bild ist grösser als 4 MB.");
+  }
+
+  // Eindeutiger, sicherer Dateiname: Umlaute oder Leerzeichen im
+  // Originalnamen führen sonst zu "Invalid key" bei Supabase.
+  const extension = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+  const fileName = `${crypto.randomUUID()}.${extension}`;
+
+  const { data: imageData, error: uploadError } = await getSupabase()
+    .storage.from("images")
+    .upload(fileName, imageFile, {
       cacheControl: "2592000",
-      contentType: "image/png",
+      contentType: imageFile.type,
     });
 
-  // Handle upload error
   if (uploadError) {
     throw new Error(`Error uploading image: ${uploadError.message}`);
   }
 
-  // Ensure imageData.path is available
   if (!imageData?.path) {
     throw new Error("Image path is not available after upload.");
   }
 
-  const data = await prisma.home.update({
+  await prisma.home.update({
     where: {
       id: homeId,
+      userId: userId,
     },
     data: {
       title: title,
@@ -107,7 +147,7 @@ export async function createDescriptionPage(formData: FormData) {
       bedrooms: roomNumber,
       bathrooms: bathroomNumber,
       guests: guestNumber,
-      photo: imageData?.path,
+      photo: imageData.path,
       addedDescription: true,
     },
   });
@@ -116,12 +156,18 @@ export async function createDescriptionPage(formData: FormData) {
 }
 
 export async function createLocationPage(formData: FormData) {
+  const userId = await requireUserId();
   const homeId = formData.get("homeId") as string;
   const countryValue = formData.get("countryValue") as string;
 
-  const data = await prisma.home.update({
+  if (!countryValue) {
+    return redirect(`/create/${homeId}/location`);
+  }
+
+  await prisma.home.update({
     where: {
       id: homeId,
+      userId: userId,
     },
     data: {
       addedLocation: true,
@@ -133,33 +179,39 @@ export async function createLocationPage(formData: FormData) {
 }
 
 export async function addToFavorite(formData: FormData) {
+  const userId = await requireUserId();
   const homeId = formData.get("homeId") as string;
-  const userId = formData.get("userId") as string;
   const pathName = formData.get("pathName") as string;
 
-  const data = await prisma.favorite.create({
-    data: {
-      homeId: homeId,
+  // Doppelklick soll keinen zweiten Favoriten anlegen
+  const existing = await prisma.favorite.findFirst({
+    where: { homeId, userId },
+  });
+
+  if (!existing) {
+    await prisma.favorite.create({
+      data: {
+        homeId: homeId,
+        userId: userId,
+      },
+    });
+  }
+
+  revalidatePath(pathName);
+}
+
+export async function deleteFromFavorite(formData: FormData) {
+  const userId = await requireUserId();
+  const favoriteId = formData.get("favoriteId") as string;
+  const pathName = formData.get("pathName") as string;
+
+  // deleteMany statt delete: wirft keinen Fehler, wenn der Eintrag schon weg ist
+  await prisma.favorite.deleteMany({
+    where: {
+      id: favoriteId,
       userId: userId,
     },
   });
 
-  revalidatePath(pathName)
+  revalidatePath(pathName);
 }
-
-export async function deleteFromFavorite(formData: FormData) {
-  const favoriteId = formData.get("favoriteId") as string;
-  const userId = formData.get("userId") as string;
-  const pathName = formData.get("pathName") as string;
-
-  const data = await prisma.favorite.delete({
-    where: {
-      id: favoriteId,
-      userId: userId,
-    }
-  });
-
-  revalidatePath(pathName)
-}
-
-

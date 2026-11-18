@@ -1,4 +1,5 @@
 import { useCountries } from "@/lib/getCountries";
+import { getImageUrl } from "@/lib/imageUrl";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -37,9 +38,10 @@ const ListingCard = ({
     <div className="flex flex-col">
       <div className="relative h-72">
         <Image
-          src={`https://atbbixtemoxbbezyxiop.supabase.co/storage/v1/object/public/images/${imagePath}`}
+          src={getImageUrl(imagePath)}
           alt="Listing Image"
           fill
+          sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="rounded-lg h-full object-cover mb-3"
         />
 
@@ -48,14 +50,12 @@ const ListingCard = ({
             {isInFavoriteList ? (
               <form action={deleteFromFavorite}>
                 <input type="hidden" name="favoriteId" value={favoriteId}/>
-                <input type="hidden" name="userId" value={userId}/>
                 <input type="hidden" name="pathName" value={pathName}/>
                 <DeleteFromFavoriteButton/>
               </form>
             ): (
               <form action={addToFavorite}>
                 <input type="hidden" name="homeId" value={homeId}/>
-                <input type="hidden" name="userId" value={userId}/>
                 <input type="hidden" name="pathName" value={pathName}/>
                 <AddToFavoriteButton/>
               </form>

@@ -1,18 +1,15 @@
 "use client"
 import CreationBottomBar from "@/components/CreationBottomBar"
+import HomeMap from "@/components/HomeMap"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { createLocationPage } from "@/lib/actions/actions"
 import { useCountries } from "@/lib/getCountries"
-import dynamic from "next/dynamic"
 import React, { useState } from 'react'
 
 const Page = ({params}: {params: {id: string}}) => {
-  
-  const { getAllCountries } = useCountries()
-  const [locationValue, setLocationValue] = useState("") 
 
-  const LazyMap = dynamic(() => import("@/components/Map"), {ssr: false, loading: () => <Skeleton className="h-[50vh] w-full"/>})
+  const { getAllCountries } = useCountries()
+  const [locationValue, setLocationValue] = useState("")
 
   return (
     <>
@@ -45,7 +42,7 @@ const Page = ({params}: {params: {id: string}}) => {
             </Select>
           </div>
 
-          <LazyMap locationValue={locationValue}/>
+          <HomeMap locationValue={locationValue}/>
         </div>
 
         <CreationBottomBar />
