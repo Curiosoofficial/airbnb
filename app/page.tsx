@@ -7,20 +7,18 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Suspense } from "react";
 
 async function getData({
-  searchParams,
-  userId
+  filter,
+  userId,
 }: {
-  userId: string | undefined,
-  searchParams?: {
-    filter?: string;
-  };
+  userId: string | undefined;
+  filter?: string;
 }) {
   const data = await prisma.home.findMany({
     where: {
       addedCategory: true,
       addedDescription: true,
       addedLocation: true,
-      categoryName: searchParams?.filter ?? undefined,
+      categoryName: filter ?? undefined,
     },
     select: {
       photo: true,
@@ -34,39 +32,40 @@ async function getData({
         },
       }
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   return data;
 }
 
-export default function Home({
+// Seit Next 15/16 ist `searchParams` ein Promise.
+export default async function Home({
   searchParams,
 }: {
-  searchParams?: {
-    filter?: string;
-  };
+  searchParams: Promise<{ filter?: string }>;
 }) {
+  const { filter } = await searchParams;
+
   return (
     <div className="container mx-auto px-5 lg:px-10">
-      <MapFilterItems />
-      <Suspense fallback={<SkeletonHome/>} key={searchParams?.filter}>
-        <ShowItems searchParams={searchParams}/>
+      {/* MapFilterItems liest die URL mit useSearchParams() und braucht darum
+          eine eigene Suspense-Grenze */}
+      <Suspense fallback={<div className="h-[68px]" />}>
+        <MapFilterItems />
       </Suspense>
-      
+      <Suspense fallback={<SkeletonHome />} key={filter}>
+        <ShowItems filter={filter} />
+      </Suspense>
     </div>
   );
 }
 
-async function ShowItems({
-  searchParams,
-}: {
-  searchParams?: {
-    filter?: string;
-  };
-}) {
+async function ShowItems({ filter }: { filter?: string }) {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
-  const data = await getData({ searchParams: searchParams, userId: user?.id });
+  const data = await getData({ filter, userId: user?.id });
 
   return (
     <>

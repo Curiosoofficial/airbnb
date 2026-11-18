@@ -9,12 +9,14 @@ async function getData(userId: string) {
     where: {
       userId: userId,
     },
+    // Die ID des eigenen Favoriten-Eintrags. Vorher wurde `Home.Favorite[0]`
+    // genommen: Das kann der Favorit eines ANDEREN Users sein.
     select: {
+      id: true,
       Home: {
         select: {
           photo: true,
           id: true,
-          Favorite: true,
           price: true,
           country: true,
           description: true,
@@ -52,8 +54,8 @@ const page = async () => {
                         imagePath={item.Home?.photo as string}
                         price={item.Home?.price as number}
                         userId={user.id}
-                        favoriteId={item.Home?.Favorite[0].id as string}
-                        isInFavoriteList={item.Home?.Favorite.length as number > 0 ? true : false}
+                        favoriteId={item.id}
+                        isInFavoriteList={true}
                     />
                 ))}
             </div>

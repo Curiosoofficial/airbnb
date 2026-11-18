@@ -1,18 +1,17 @@
 "use client"
 import CreationBottomBar from "@/components/CreationBottomBar"
+import HomeMap from "@/components/HomeMap"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { createLocationPage } from "@/lib/actions/actions"
 import { useCountries } from "@/lib/getCountries"
-import dynamic from "next/dynamic"
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 
-const Page = ({params}: {params: {id: string}}) => {
-  
+// Client-Komponente: das `params`-Promise wird mit React `use()` ausgepackt.
+const Page = ({params}: {params: Promise<{id: string}>}) => {
+  const { id } = use(params)
+
   const { getAllCountries } = useCountries()
-  const [locationValue, setLocationValue] = useState("") 
-
-  const LazyMap = dynamic(() => import("@/components/Map"), {ssr: false, loading: () => <Skeleton className="h-[50vh] w-full"/>})
+  const [locationValue, setLocationValue] = useState("")
 
   return (
     <>
@@ -23,7 +22,7 @@ const Page = ({params}: {params: {id: string}}) => {
       </div>
 
       <form action={createLocationPage}>
-        <input type="hidden" name="homeId" value={params.id}/>
+        <input type="hidden" name="homeId" value={id}/>
         <input type="hidden" name="countryValue" value={locationValue}/>
         <div className="w-3/5 mx-auto mb-36">
           <div className="mb-5">
@@ -45,7 +44,7 @@ const Page = ({params}: {params: {id: string}}) => {
             </Select>
           </div>
 
-          <LazyMap locationValue={locationValue}/>
+          <HomeMap locationValue={locationValue}/>
         </div>
 
         <CreationBottomBar />

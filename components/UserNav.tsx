@@ -20,9 +20,8 @@ import { createAirbnbHome } from "@/lib/actions/actions";
 const UserNav = async () => {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
-  const userImage = user?.picture || "/user.png";
-
-  const createHomeWithId = createAirbnbHome.bind(null, { userId: user?.id as string})
+  // "/user.png" gab es im public-Ordner nie, darum war das Bild für Gäste kaputt
+  const userImage = user?.picture || "/profileImage.jpg";
 
   return (
     <DropdownMenu>
@@ -35,7 +34,8 @@ const UserNav = async () => {
             src={userImage}
             width={30}
             height={30}
-            className="rounded-full hidden lg:block"
+            unoptimized
+            className="rounded-full hidden lg:block size-[30px] object-cover"
           />
         </div>
       </DropdownMenuTrigger>
@@ -43,7 +43,7 @@ const UserNav = async () => {
         {user ? (
           <>
             <DropdownMenuItem>
-              <form action={createHomeWithId} className="w-full">
+              <form action={createAirbnbHome} className="w-full">
                 <button type="submit" className="w-full text-start">
                   Airbnb your Home
                 </button>
@@ -58,10 +58,6 @@ const UserNav = async () => {
               <Link href="/favorites">My Favorites</Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem>
-              <Link href="/reservations">My Reservations</Link>
-            </DropdownMenuItem>
-            
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogoutLink className="w-full">Logout</LogoutLink>

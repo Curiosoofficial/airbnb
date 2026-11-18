@@ -4,8 +4,11 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // Namen wie sie die Supabase-Integration von Vercel automatisch setzt.
+  // POSTGRES_PRISMA_URL: Transaction Pooler (Port 6543) für die App
+  // POSTGRES_URL_NON_POOLING: direkte Verbindung für `prisma db push`
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model User {

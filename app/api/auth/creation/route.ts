@@ -1,14 +1,14 @@
 import prisma from "@/db/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const { getUser } = getKindeServerSession();
 
   const user = await getUser();
 
   if (!user || user === null || !user.id) {
-    throw new Error("User not found");
+    return NextResponse.redirect(new URL("/api/auth/login", request.url));
   }
 
   let dbUser = await prisma.user.findUnique({
@@ -30,6 +30,7 @@ export async function GET() {
     });
   }
 
-  return NextResponse.redirect("http://localhost:3000/");
-  //todo add redirect to the frontend
+  // Relativ zur aktuellen Domain weiterleiten. Vorher stand hier fest
+  // "http://localhost:3000/", das funktioniert auf Vercel nicht.
+  return NextResponse.redirect(new URL("/", request.url));
 }
