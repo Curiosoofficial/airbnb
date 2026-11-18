@@ -15,13 +15,17 @@ Unterkunft in drei Schritten ein.
 
 ![Startseite mit Demo-Inseraten](docs/screenshots/startseite.jpg)
 
-| Detailseite | Gastgeber, Kategorie und Karte |
+| Suche (Land, Daten, Gäste) | Buchen mit Kalender |
 | --- | --- |
-| ![Detailseite](docs/screenshots/detailseite.jpg) | ![Detailseite mit Karte](docs/screenshots/detailseite-karte.jpg) |
+| ![Suchdialog mit Land und Reisedaten](docs/screenshots/suche.jpg) | ![Buchungskarte mit Kalender, belegte Tage durchgestrichen](docs/screenshots/buchen.jpg) |
+| **Kartenansicht** | **My Trips** |
+| ![Karte mit Preis-Schildern und Vorschau](docs/screenshots/karte.jpg) | ![Gebuchte Reise und Buchungen auf eigenen Inseraten](docs/screenshots/meine-reisen.jpg) |
 
-Die Demo-Inserate wurden über das normale Formular der App angelegt. Die Fotos stammen
-von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Zum Buchen, Speichern und Inserieren
-braucht es ein Login (Google oder E-Mail über Kinde). Bezahlt wird nichts, es ist eine Demo.
+Die Inserate wurden über das normale Formular der App angelegt, die Fotos stammen
+von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Gastgeber Marco, Mia und Sofia und
+ihre Buchungen sind Demo-Daten, damit man belegte Tage und die Gastgeber-Sicht sieht.
+Zum Buchen, Speichern und Inserieren braucht es ein Login (Google oder E-Mail über Kinde).
+Bezahlt wird nichts, es ist eine Demo.
 
 ## Funktionen
 

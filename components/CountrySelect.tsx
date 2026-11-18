@@ -42,8 +42,10 @@ const CountrySelect = ({
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Countries</SelectLabel>
+            {/* textValue: Tastatursuche ("I-t-a" springt zu Italy). Ohne das sucht
+                Radix im sichtbaren Text, und der beginnt mit der Flagge. */}
             {getAllCountries().map((item) => (
-              <SelectItem key={item.value} value={item.value}>
+              <SelectItem key={item.value} value={item.value} textValue={item.label}>
                 {item.flag} {item.label}
               </SelectItem>
             ))}
