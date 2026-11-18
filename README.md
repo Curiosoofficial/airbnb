@@ -28,17 +28,17 @@ und Löschen von Inseraten.
 
 | Bereich | Technik |
 | --- | --- |
-| Framework | Next.js 14 (App Router, Server Components, Server Actions), React 18, TypeScript |
+| Framework | Next.js 16 (App Router, Server Components, Server Actions, Turbopack), React 19, TypeScript |
 | Styling / UI | Tailwind CSS, shadcn/ui (Radix UI), lucide-react |
 | Datenbank | PostgreSQL bei Supabase, Prisma ORM |
 | Bilder | Supabase Storage |
 | Login | Kinde (`@kinde-oss/kinde-auth-nextjs`) |
 | Karten | Leaflet / react-leaflet, Länderdaten aus `world-countries` |
-| Hosting | Vercel |
+| Hosting | Vercel (Region Frankfurt), täglicher Cron-Job gegen das Pausieren der Gratis-Datenbank |
 
 ## Lokal starten
 
-Voraussetzungen: Node.js 22 oder neuer, ein kostenloses Supabase-Konto und ein kostenloses Kinde-Konto.
+Voraussetzungen: Node.js 24, ein kostenloses Supabase-Konto und ein kostenloses Kinde-Konto.
 
 ### 1. Installieren
 
@@ -54,9 +54,11 @@ npm install
 
 1. Auf [supabase.com](https://supabase.com) ein neues Projekt anlegen und das Datenbank-Passwort notieren.
 2. **Connect → ORMs → Prisma**: Die beiden Verbindungs-URLs kopieren.
-   - `DATABASE_URL` = Transaction Pooler (Port **6543**, mit `?pgbouncer=true&connection_limit=1`)
-   - `DIRECT_URL` = Session Pooler (Port **5432**)
-3. **Project Settings → API Keys**: Projekt-URL und anon key (bzw. publishable key) kopieren.
+   - `POSTGRES_PRISMA_URL` = Transaction Pooler (Port **6543**, mit `?pgbouncer=true&connection_limit=1`)
+   - `POSTGRES_URL_NON_POOLING` = Session Pooler (Port **5432**)
+3. **Project Settings → API Keys**: Projekt-URL und den geheimen `service_role` key (bzw. secret key) kopieren.
+
+Die Variablennamen sind dieselben, die die Supabase-Integration von Vercel automatisch setzt.
 
 ### 3. Umgebungsvariablen
 
@@ -81,7 +83,6 @@ Im Supabase-Dashboard den **SQL Editor** öffnen und den Inhalt von
 [`supabase/setup.sql`](supabase/setup.sql) ausführen. Das Skript:
 
 - legt den öffentlichen Bucket `images` an (max. 4 MB, nur Bilder),
-- erlaubt den Upload in diesen Bucket,
 - schaltet Row Level Security für die drei Tabellen ein. Prisma funktioniert weiterhin, aber über
   die öffentliche Supabase-API kann niemand mehr direkt Daten lesen.
 
@@ -105,11 +106,20 @@ App läuft auf [http://localhost:3000](http://localhost:3000).
 ## Deployment auf Vercel
 
 1. Repository auf [vercel.com/new](https://vercel.com/new) importieren (Framework wird automatisch erkannt).
-2. Alle Variablen aus `.env.example` unter **Settings → Environment Variables** eintragen.
+2. **Storage → Create → Supabase** (Free Plan, Region Frankfurt) und die Datenbank mit dem Projekt
+   verbinden. Vercel setzt `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `SUPABASE_URL` und
+   `SUPABASE_SERVICE_ROLE_KEY` automatisch. Kein Schlüssel muss von Hand kopiert werden.
+3. Tabellen anlegen: Das SQL aus `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script`
+   und danach [`supabase/setup.sql`](supabase/setup.sql) unter **Storage → Datenbank → Query** ausführen.
+4. Die Kinde-Variablen unter **Settings → Environment Variables** eintragen.
    Die drei `KINDE_*_URL`-Werte zeigen auf die Vercel-Domain, z. B. `https://<projekt>.vercel.app`.
-3. Deployen. Das Build-Script führt zuerst `prisma generate` aus und danach `next build`.
-4. In Kinde zusätzlich die Vercel-Domain bei den Callback- und Logout-URLs eintragen
+5. Deployen. Das Build-Script führt zuerst `prisma generate` aus und danach `next build`.
+6. In Kinde die Vercel-Domain bei den Callback- und Logout-URLs eintragen
    (`https://<projekt>.vercel.app/api/auth/kinde_callback` und `https://<projekt>.vercel.app`).
+
+`vercel.json` legt die Server-Funktionen nach Frankfurt (nah an der Datenbank) und startet
+jeden Morgen den Cron-Job `/api/keepalive`. Er macht eine kleine Abfrage, damit Supabase das
+Gratis-Projekt nicht nach 7 Tagen ohne Besucher pausiert.
 
 ## Nachträglich repariert (2026)
 
@@ -127,8 +137,11 @@ Das Projekt lief nach zwei Jahren nicht mehr. Diese Fehler wurden gefunden und b
 | Upload grosser Fotos bricht ab | Server Actions erlauben standardmässig nur 1 MB. Dazu fester `contentType: "image/png"`, und Umlaute im Dateinamen führten zu „Invalid key“. | Limit 4 MB, echter Dateityp, zufälliger Dateiname (UUID). |
 | Karte wird ständig neu aufgebaut, springt nicht zum gewählten Land | `dynamic()` wurde im Komponenten-Körper aufgerufen. `ssr: false` stand in einer Server-Komponente. | `dynamic()` auf Modul-Ebene in einer Client-Komponente, `Recenter` setzt die Ansicht neu. |
 | Detailseite crasht | Ohne Kategorie fehlte das Bild-`src`. Profilbilder von fremden Hosts (z. B. `avatar.vercel.sh`) waren in Next nicht erlaubt. Bei unbekannter ID blieb die Seite halb leer. | Kategorie wird geprüft, Avatare `unoptimized`, `notFound()` bei unbekannter ID. |
+| Kritische Sicherheitslücken trotz Update | Next.js 14 bekommt keine Fixes mehr. `npm audit` meldete u. a. Remote Code Execution in der Bildoptimierung. | Upgrade auf Next.js 16 und React 19: `params`/`searchParams` sind jetzt Promises (`await` bzw. `use()`), ESLint Flat Config statt `next lint`, react-leaflet 5. |
+| Live-Demo wäre nach einer Woche tot | Supabase pausiert Gratis-Projekte nach 7 Tagen ohne Aktivität. | Täglicher Vercel-Cron auf `/api/keepalive`. |
+| Upload brauchte eine offene Regel | Hochgeladen wurde mit dem öffentlichen anon key, dafür musste jeder in den Bucket schreiben dürfen. | Upload nur auf dem Server mit dem geheimen Service-Key, keine offene Upload-Regel mehr. |
 | Kaputtes Profilbild für Gäste, toter Link | `/user.png` existierte nicht. „My Reservations“ führte auf eine 404-Seite. Platzhalter „Hello from search“ in der Navigation. | Vorhandenes Platzhalterbild, Link und Platzhalter entfernt. |
 
-**Bewusst nicht gemacht:** ein Upgrade auf Next.js 15/16. Das wäre ein grosser Umbau (React 19,
-asynchrone `params`, react-leaflet 5). Next.js 14 bekommt keine Updates mehr. Einige Hinweise
-von `npm audit` lassen sich deshalb nur mit diesem Major-Upgrade schliessen.
+**Noch offen:** `npm audit` meldet Hinweise in Tailwind CSS 3 (Abhängigkeiten `picomatch`, `glob`).
+Die laufen nur beim Bauen, nicht auf dem Server. Weg gehen sie erst mit Tailwind 4, das wäre
+ein Umbau aller Styles.

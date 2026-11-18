@@ -4,7 +4,8 @@ import SelectCategory from "@/components/SelectCategory";
 import { createCategoryPage } from "@/lib/actions/actions";
 
 
-const page = ({params}: {params: {id: string}}) => {
+const page = async ({params}: {params: Promise<{id: string}>}) => {
+  const { id } = await params;
   return (
     <>
       <div className="w-3/5 mx-auto">
@@ -14,7 +15,7 @@ const page = ({params}: {params: {id: string}}) => {
       </div>
 
       <form action={createCategoryPage}>
-        <input type="hidden" name="homeId" value={params.id} />
+        <input type="hidden" name="homeId" value={id} />
         <SelectCategory />
 
         <CreationBottomBar />

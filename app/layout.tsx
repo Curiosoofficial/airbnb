@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Airbnb-Klon (Tutorial-Projekt)",
-  description: "Airbnb-Klon mit Next.js 14, Prisma, Supabase und Kinde. Nach einem Video-Tutorial nachgebaut.",
+  description: "Airbnb-Klon mit Next.js 16, Prisma, Supabase und Kinde. Nach einem Video-Tutorial nachgebaut.",
 };
 
 export default function RootLayout({

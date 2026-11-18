@@ -8,16 +8,16 @@ const countriesFormatted = countries.map((item) => ({
     region: item.region,
 }))
 
-export const useCountries = () => {
-    const getAllCountries = () => countriesFormatted
+export const getAllCountries = () => countriesFormatted
 
-
-    const getCountryByValue = (value: string) => {
-        return countriesFormatted.find((item) => item.value === value)
-    };
-
-    return {
-        getAllCountries,
-        getCountryByValue,
-    }
+export const getCountryByValue = (value: string) => {
+    return countriesFormatted.find((item) => item.value === value)
 }
+
+// Trotz "use" im Namen kein echter React-Hook (kein State, kein Effect).
+// Für Server-Komponenten, besonders async ones, die Funktionen oben direkt
+// importieren: Hooks sind dort verboten, und ESLint meldet das sonst.
+export const useCountries = () => ({
+    getAllCountries,
+    getCountryByValue,
+})

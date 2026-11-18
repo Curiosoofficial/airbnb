@@ -1,4 +1,4 @@
-import { useCountries } from "@/lib/getCountries";
+import { getCountryByValue } from "@/lib/getCountries";
 import { getImageUrl } from "@/lib/imageUrl";
 
 import Image from "next/image";
@@ -31,7 +31,6 @@ const ListingCard = ({
   homeId,
   pathName,
 }: IAppProps) => {
-    const {getCountryByValue} = useCountries();
     const country = getCountryByValue(location);
 
   return (

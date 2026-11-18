@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { createDescriptionPage } from "@/lib/actions/actions"
 import React from 'react'
 
-const page = ({params}: {params: {id: string}}) => {
+// Seit Next 15/16 sind `params` ein Promise und müssen mit `await` gelesen werden.
+const page = async ({params}: {params: Promise<{id: string}>}) => {
+  const { id } = await params;
 
   return (
     <>
@@ -19,7 +21,7 @@ const page = ({params}: {params: {id: string}}) => {
       </div>
 
         <form action={createDescriptionPage}>
-          <input type="hidden" name="homeId" value={params.id}/>
+          <input type="hidden" name="homeId" value={id}/>
           <div className="mx-auto w-3/5 mt-10 flex flex-col gap-y-5 mb-36">
             <div className="flex flex-col gap-y-2">
               <Label>Titel</Label>

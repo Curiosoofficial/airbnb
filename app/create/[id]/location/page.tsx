@@ -4,9 +4,11 @@ import HomeMap from "@/components/HomeMap"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createLocationPage } from "@/lib/actions/actions"
 import { useCountries } from "@/lib/getCountries"
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 
-const Page = ({params}: {params: {id: string}}) => {
+// Client-Komponente: das `params`-Promise wird mit React `use()` ausgepackt.
+const Page = ({params}: {params: Promise<{id: string}>}) => {
+  const { id } = use(params)
 
   const { getAllCountries } = useCountries()
   const [locationValue, setLocationValue] = useState("")
@@ -20,7 +22,7 @@ const Page = ({params}: {params: {id: string}}) => {
       </div>
 
       <form action={createLocationPage}>
-        <input type="hidden" name="homeId" value={params.id}/>
+        <input type="hidden" name="homeId" value={id}/>
         <input type="hidden" name="countryValue" value={locationValue}/>
         <div className="w-3/5 mx-auto mb-36">
           <div className="mb-5">

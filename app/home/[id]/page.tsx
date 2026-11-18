@@ -2,7 +2,7 @@ import CategoryShowcase from "@/components/CategoryShowcase";
 import HomeMap from "@/components/HomeMap";
 import { Separator } from "@/components/ui/separator";
 import prisma from "@/db/db";
-import { useCountries } from "@/lib/getCountries";
+import { getCountryByValue } from "@/lib/getCountries";
 import { getImageUrl } from "@/lib/imageUrl";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -34,15 +34,15 @@ async function getData(homeId: string) {
   return data;
 }
 
-const Page = async ({ params }: { params: { id: string } }) => {
-  const data = await getData(params.id);
+const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
+  const data = await getData(id);
 
   // Unbekannte ID: saubere 404-Seite statt einer halb leeren Seite
   if (!data) {
     notFound();
   }
 
-  const {getCountryByValue} = useCountries();
   const country = getCountryByValue(data.country as string);
   return (
     <div className="w-[75%] mx-auto my-10">
