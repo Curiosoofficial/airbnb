@@ -9,7 +9,17 @@ Eine vereinfachte Airbnb-Kopie: Man meldet sich an, stellt die eigene Unterkunft
 Schritten ein (Kategorie, Beschreibung mit Foto, Land auf der Karte) und kann Inserate
 anderer nach Kategorie filtern und als Favoriten speichern.
 
-**Live-Demo:** [LIVE-LINK FOLGT]
+**Live-Demo:** [airbnb-klon-curioso.vercel.app](https://airbnb-klon-curioso.vercel.app)
+
+![Startseite mit Demo-Inseraten](docs/screenshots/startseite.jpg)
+
+| Detailseite | Gastgeber, Kategorie und Karte |
+| --- | --- |
+| ![Detailseite](docs/screenshots/detailseite.jpg) | ![Detailseite mit Karte](docs/screenshots/detailseite-karte.jpg) |
+
+Die acht Demo-Inserate wurden über das normale Formular der App angelegt. Die Fotos stammen
+von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Zum Ausprobieren von Inserat erstellen
+und Favoriten braucht es ein Login (Google oder E-Mail über Kinde).
 
 ## Funktionen
 
