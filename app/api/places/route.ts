@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
   }
 
   const published = { addedCategory: true, addedDescription: true, addedLocation: true };
-  const countries = findCountries(q, 4);
+  // Grosszügig suchen und erst danach kürzen: bei "nor" kommen North Korea,
+  // North Macedonia ... vor Norway, das als einziges Inserate hat
+  const countries = findCountries(q, 30);
 
   const [cities, countryCounts, stays] = await Promise.all([
     prisma.home.groupBy({
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
       })),
     // Länder ohne Inserat nur zeigen, wenn sonst nichts passt
     // (sonst landen bei "sant" Saint Helena und Co. in der Liste)
-    ...(hasOtherHits ? withStays : countrySuggestions.slice(0, 2)).map(({ count, ...country }) => ({
+    ...(hasOtherHits ? withStays.slice(0, 3) : countrySuggestions.slice(0, 2)).map(({ count, ...country }) => ({
       ...country,
       sublabel: count > 0 ? plural(count, "stay") : "No stays yet",
     })),

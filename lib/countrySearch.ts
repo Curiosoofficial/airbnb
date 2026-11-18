@@ -23,6 +23,7 @@ const searchIndex = countries.map((country) => {
   return {
     code: country.cca2,
     label: country.name.common,
+    key: normalize(country.name.common),
     flag: country.flag,
     names: [...names].map(normalize),
   };
@@ -35,7 +36,11 @@ export function findCountries(query: string, limit = 5) {
   if (q.length < 2) return [];
 
   const exactCode = q.length === 2 ? searchIndex.filter((c) => c.code.toLowerCase() === q) : [];
-  const starts = searchIndex.filter((c) => c.names.some((name) => name.startsWith(q)));
+  // Länder, deren englischer Name passt ("gr" -> Greece, Greenland), vor
+  // Treffern, die nur über eine Übersetzung oder Abkürzung zustande kommen
+  const starts = searchIndex
+    .filter((c) => c.names.some((name) => name.startsWith(q)))
+    .sort((a, b) => Number(b.key.startsWith(q)) - Number(a.key.startsWith(q)));
   const contains = q.length >= 4 ? searchIndex.filter((c) => c.names.some((name) => name.includes(q))) : [];
 
   const seen = new Set<string>();
