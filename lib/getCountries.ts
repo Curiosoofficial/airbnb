@@ -1,16 +1,19 @@
-import countries from "world-countries"
+import countries from "@/constants/countries.json"
 
-// Alphabetisch nach Namen sortiert. Vorher war die Liste nach Ländercode
-// sortiert, darum stand "Aruba" zuoberst und die Schweiz irgendwo in der Mitte.
-const countriesFormatted = countries
-    .map((item) => ({
-        value: item.cca2,
-        label: item.name.common,
-        flag: item.flag,
-        latLang: item.latlng,
-        region: item.region,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, "en"))
+// Kompakte Länderliste (Code, Name, Flagge, Mittelpunkt), alphabetisch sortiert.
+// Vorher wurde hier das ganze Paket "world-countries" importiert (512 KB mit
+// Grenzen, Währungen, Übersetzungen ...). Weil Länderauswahl und Karten im
+// Browser laufen, landete alles im JavaScript-Bundle. Jetzt sind es 24 KB.
+// Neu erzeugen: siehe scripts/build-countries.mjs
+type Country = {
+    value: string
+    label: string
+    flag: string
+    latLang: number[]
+    region: string
+}
+
+const countriesFormatted = countries as Country[]
 
 export const getAllCountries = () => countriesFormatted
 

@@ -2,12 +2,12 @@
 
 import { createReservation } from "@/lib/actions/actions"
 import { countNights, fromDateKey, toDateKey } from "@/lib/dates"
-import { formatPrice, plural } from "@/lib/format"
+import { formatPrice, formatRating, plural } from "@/lib/format"
 import { useMediaQuery } from "@/lib/hooks"
 import type { FormState } from "@/lib/types"
 import { LoginLink } from "@kinde-oss/kinde-auth-nextjs/components"
 import { addDays, format, subDays } from "date-fns"
-import { Loader2 } from "lucide-react"
+import { Loader2, Star } from "lucide-react"
 import Link from "next/link"
 import { useActionState, useMemo, useState } from "react"
 import { useFormStatus } from "react-dom"
@@ -25,6 +25,7 @@ interface Props {
   booked: { start: string; end: string }[]
   isOwner: boolean
   isLoggedIn: boolean
+  rating?: { average: number; count: number } | null
 }
 
 const MAX_NIGHTS = 28
@@ -38,7 +39,7 @@ const ReserveButton = ({ disabled }: { disabled: boolean }) => {
   )
 }
 
-const ReservationCard = ({ homeId, price, maxGuests, booked, isOwner, isLoggedIn }: Props) => {
+const ReservationCard = ({ homeId, price, maxGuests, booked, isOwner, isLoggedIn, rating }: Props) => {
   const [state, formAction] = useActionState<FormState, FormData>(createReservation, null)
   const [range, setRange] = useState<DateRange | undefined>()
   const [open, setOpen] = useState(false)
@@ -74,10 +75,19 @@ const ReservationCard = ({ homeId, price, maxGuests, booked, isOwner, isLoggedIn
 
   return (
     <div className="rounded-xl border p-6 shadow-xl">
-      <p className="mb-5">
-        <span className="text-2xl font-semibold">{formatPrice(price)}</span>{" "}
-        <span className="text-muted-foreground">night</span>
-      </p>
+      <div className="mb-5 flex items-baseline justify-between gap-x-2">
+        <p>
+          <span className="text-2xl font-semibold">{formatPrice(price)}</span>{" "}
+          <span className="text-muted-foreground">night</span>
+        </p>
+        {rating && (
+          <a href="#reviews" className="flex items-center gap-x-1 text-sm">
+            <Star className="size-3.5 fill-foreground"/>
+            <span className="font-medium">{formatRating(rating.average)}</span>
+            <span className="text-muted-foreground underline">· {plural(rating.count, "review")}</span>
+          </a>
+        )}
+      </div>
 
       <form action={formAction} className="flex flex-col gap-y-4">
         <input type="hidden" name="homeId" value={homeId}/>

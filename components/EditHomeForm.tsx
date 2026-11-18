@@ -7,8 +7,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
-import CountrySelect from "./CountrySelect"
 import HomeDetailsFields from "./HomeDetailsFields"
+import LocationPicker from "./LocationPicker"
 import SelectCategory from "./SelectCategory"
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
@@ -24,6 +24,10 @@ interface Props {
     bathrooms: number | null
     categoryName: string | null
     country: string | null
+    city: string | null
+    latitude: number | null
+    longitude: number | null
+    amenities: string[]
   }
   // Fertige Bild-URL vom Server: SUPABASE_URL gibt es im Browser nicht
   imageUrl: string
@@ -67,7 +71,14 @@ const EditHomeForm = ({ home, imageUrl }: Props) => {
 
       <section className="flex flex-col gap-y-4">
         <h2 className="text-xl font-semibold">Location</h2>
-        <CountrySelect defaultValue={home.country ?? ""} showMap/>
+        <LocationPicker
+          defaultValue={{
+            city: home.city ?? undefined,
+            country: home.country ?? undefined,
+            latitude: home.latitude ?? undefined,
+            longitude: home.longitude ?? undefined,
+          }}
+        />
       </section>
 
       {state?.error && (

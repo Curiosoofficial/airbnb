@@ -26,12 +26,14 @@ async function getData(userId: string) {
         endDate: true,
         guests: true,
         totalPrice: true,
+        Review: { select: { rating: true } },
         Home: {
           select: {
             id: true,
             title: true,
             photo: true,
             country: true,
+            city: true,
             User: { select: { firstName: true } },
           },
         },
@@ -72,7 +74,7 @@ const page = async ({ searchParams }: { searchParams: Promise<{ booked?: string 
   const past = trips.filter((trip) => dbToDateKey(trip.endDate) <= todayKey);
   const justBooked = trips.find((trip) => trip.id === booked);
 
-  const renderTrip = (trip: (typeof trips)[number], canCancel: boolean) => (
+  const renderTrip = (trip: (typeof trips)[number], upcoming: boolean) => (
     <TripCard
       key={trip.id}
       reservationId={trip.id}
@@ -80,12 +82,15 @@ const page = async ({ searchParams }: { searchParams: Promise<{ booked?: string 
       title={trip.Home?.title ?? "Deleted listing"}
       photo={trip.Home?.photo ?? null}
       country={trip.Home?.country ?? ""}
+      city={trip.Home?.city}
       hostName={trip.Home?.User?.firstName ?? "-"}
       startKey={dbToDateKey(trip.startDate)}
       endKey={dbToDateKey(trip.endDate)}
       guests={trip.guests}
       totalPrice={trip.totalPrice}
-      canCancel={canCancel && dbToDateKey(trip.startDate) > todayKey}
+      canCancel={upcoming && dbToDateKey(trip.startDate) > todayKey}
+      canReview={!upcoming && !!trip.Home}
+      myRating={trip.Review?.rating}
       highlight={trip.id === booked}
     />
   );
