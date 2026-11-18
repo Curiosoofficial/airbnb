@@ -3,6 +3,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
@@ -25,8 +26,8 @@ const UserNav = async () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <div className="rounded-full border p-2 lg:py-2 lg:px-4 flex items-center gap-x-3">
+      <DropdownMenuTrigger aria-label="Open user menu" className="rounded-full">
+        <div className="rounded-full border p-2 lg:py-2 lg:px-4 flex items-center gap-x-3 hover:shadow-md transition-shadow">
           <MenuIcon className="size-6 lg:size-5" />
 
           <Image
@@ -39,9 +40,23 @@ const UserNav = async () => {
           />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[200px]">
+      {/* asChild: Der ganze Menüeintrag ist klickbar, nicht nur der Text darin */}
+      <DropdownMenuContent align="end" className="w-[220px]">
         {user ? (
           <>
+            <DropdownMenuLabel className="font-normal text-muted-foreground">
+              Hi {user.given_name || "there"}!
+            </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href="/reservations" className="w-full font-medium">My Trips</Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link href="/favorites" className="w-full font-medium">My Favorites</Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
             <DropdownMenuItem>
               <form action={createAirbnbHome} className="w-full">
                 <button type="submit" className="w-full text-start">
@@ -50,27 +65,22 @@ const UserNav = async () => {
               </form>
             </DropdownMenuItem>
 
-            <DropdownMenuItem>
-              <Link href="/my-homes">My Listings</Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem>
-              <Link href="/favorites">My Favorites</Link>
+            <DropdownMenuItem asChild>
+              <Link href="/my-homes" className="w-full">My Listings</Link>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <LogoutLink className="w-full">Logout</LogoutLink>
             </DropdownMenuItem>
-            
           </>
         ) : (
           <>
-            <DropdownMenuItem>
-              <RegisterLink className="w-full">Register</RegisterLink>
+            <DropdownMenuItem asChild>
+              <LoginLink className="w-full font-medium">Sign in</LoginLink>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <LoginLink className="w-full">Sign in</LoginLink>
+            <DropdownMenuItem asChild>
+              <RegisterLink className="w-full">Register</RegisterLink>
             </DropdownMenuItem>
           </>
         )}

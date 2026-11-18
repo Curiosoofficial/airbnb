@@ -70,3 +70,56 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+
+/* Kalender (react-day-picker) im Airbnb-Look.
+   ".rdp-root.rdp-airbnb" (zwei Klassen): stärker als ".rdp-root" aus dem
+   Standard-CSS, das später geladen wird und sonst wieder Blau setzt. */
+.rdp-root.rdp-airbnb {
+  --rdp-accent-color: hsl(var(--foreground));
+  --rdp-accent-background-color: hsl(var(--muted));
+  --rdp-today-color: hsl(var(--primary));
+  --rdp-day-height: 40px;
+  --rdp-day-width: 40px;
+  --rdp-day_button-height: 38px;
+  --rdp-day_button-width: 38px;
+  --rdp-months-gap: 2.5rem;
+  --rdp-selected-border: 2px solid hsl(var(--foreground));
+  font-size: 0.875rem;
+}
+
+.rdp-airbnb .rdp-range_start .rdp-day_button,
+.rdp-airbnb .rdp-range_end .rdp-day_button {
+  background-color: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+
+/* Vergangene Tage nur blass, gebuchte Nächte zusätzlich durchgestrichen */
+.rdp-airbnb .rdp-booked .rdp-day_button {
+  text-decoration: line-through;
+}
+
+/* Preis-Marker auf der Kartenansicht (Leaflet divIcon) */
+.price-marker {
+  background: transparent;
+  border: none;
+}
+
+.price-marker span {
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: hsl(var(--background));
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  transition: transform 0.15s;
+}
+
+.price-marker span:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
