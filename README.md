@@ -1,13 +1,15 @@
 # Airbnb-Klon
 
 > **Tutorial-Projekt, nach einem Video-Tutorial nachgebaut.**
-> Der Grundaufbau stammt aus einem YouTube-Tutorial. Im November 2026 wurde das Projekt
-> repariert und für ein Live-Deployment vorbereitet (siehe
-> [„Nachträglich repariert“](#nachträglich-repariert-2026)).
+> Der Grundaufbau stammt aus einem YouTube-Tutorial, das vor Suche und Buchung endet.
+> Im November 2026 wurde das Projekt repariert (siehe
+> [„Nachträglich repariert“](#nachträglich-repariert-2026)) und selbst fertig gebaut:
+> Suche, Kartenansicht, Buchen mit Kalender, Reisen-Übersicht, Inserate bearbeiten und löschen
+> (siehe [„Eigene Erweiterungen“](#eigene-erweiterungen-2026)).
 
-Eine vereinfachte Airbnb-Kopie: Man meldet sich an, stellt die eigene Unterkunft in drei
-Schritten ein (Kategorie, Beschreibung mit Foto, Land auf der Karte) und kann Inserate
-anderer nach Kategorie filtern und als Favoriten speichern.
+Eine vereinfachte Airbnb-Kopie: Man sucht Unterkünfte nach Land, Reisedaten und Gästezahl,
+sieht sie als Liste oder auf der Karte, bucht sie über einen Kalender und stellt die eigene
+Unterkunft in drei Schritten ein.
 
 **Live-Demo:** [airbnb-klon-curioso.vercel.app](https://airbnb-klon-curioso.vercel.app)
 
@@ -17,22 +19,24 @@ anderer nach Kategorie filtern und als Favoriten speichern.
 | --- | --- |
 | ![Detailseite](docs/screenshots/detailseite.jpg) | ![Detailseite mit Karte](docs/screenshots/detailseite-karte.jpg) |
 
-Die acht Demo-Inserate wurden über das normale Formular der App angelegt. Die Fotos stammen
-von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Zum Ausprobieren von Inserat erstellen
-und Favoriten braucht es ein Login (Google oder E-Mail über Kinde).
+Die Demo-Inserate wurden über das normale Formular der App angelegt. Die Fotos stammen
+von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Zum Buchen, Speichern und Inserieren
+braucht es ein Login (Google oder E-Mail über Kinde). Bezahlt wird nichts, es ist eine Demo.
 
 ## Funktionen
 
-- Login und Registrierung mit Kinde (E-Mail oder Social Login)
-- Inserat erstellen in drei Schritten: Kategorie → Beschreibung, Preis, Foto → Land mit Karte
-- Bild-Upload in Supabase Storage
-- Startseite mit Filter nach Kategorie
-- Detailseite mit Gastgeber, Kategorie und Leaflet-Karte (OpenStreetMap)
-- Favoriten speichern und entfernen
-- „My Listings“: eigene Inserate
-
-**Nicht umgesetzt** (der Tutorial-Stand endet vorher): Suche, Reservierungen, Bearbeiten
-und Löschen von Inseraten.
+- **Suche** wie bei Airbnb: Land, Reisedaten und Gäste. Nur Unterkünfte, die im gewählten
+  Zeitraum frei sind und genug Platz haben. Die Suche steht in der URL und lässt sich als Link teilen.
+- **Kategorien** (Beach, Pool, Tiny Home …) kombinierbar mit der Suche
+- **Kartenansicht** mit Preis-Schildern und Vorschau, umschaltbar mit „Show map“ / „Show list“
+- **Buchen**: Kalender mit belegten Tagen, Gästezahl, Preisberechnung, Schutz vor Doppelbuchungen
+- **My Trips**: kommende und vergangene Reisen, Stornieren vor Reisebeginn,
+  dazu für Gastgeber die Buchungen auf den eigenen Inseraten
+- **Inserieren** in drei Schritten (Kategorie → Beschreibung, Preis, Foto → Land mit Karte),
+  danach **bearbeiten** oder **löschen** (gesperrt, solange Gäste gebucht haben)
+- **Favoriten** speichern und entfernen
+- Login mit Kinde (Google oder E-Mail), danach zurück auf die Seite, auf der man war
+- Responsive bis Handy-Breite, eigene 404- und Fehlerseite, Hinweis in eingebetteten Demos (iframe)
 
 ## Stack
 
@@ -44,6 +48,7 @@ und Löschen von Inseraten.
 | Bilder | Supabase Storage |
 | Login | Kinde (`@kinde-oss/kinde-auth-nextjs`) |
 | Karten | Leaflet / react-leaflet, Länderdaten aus `world-countries` |
+| Kalender | react-day-picker, date-fns |
 | Hosting | Vercel (Region Frankfurt), täglicher Cron-Job gegen das Pausieren der Gratis-Datenbank |
 
 ## Lokal starten
@@ -88,6 +93,9 @@ Das ist `prisma db push`: Prisma erstellt die Tabellen `User`, `Home` und `Favor
 `prisma/schema.prisma`. Migrationsdateien gibt es in diesem Projekt keine.
 
 ### 5. Storage-Bucket und Sicherheit
+
+> Bestehende Datenbank von vor November 2026? Dann zuerst
+> [`supabase/migrations/2026-11-buchungen.sql`](supabase/migrations/2026-11-buchungen.sql) ausführen.
 
 Im Supabase-Dashboard den **SQL Editor** öffnen und den Inhalt von
 [`supabase/setup.sql`](supabase/setup.sql) ausführen. Das Skript:
@@ -152,6 +160,22 @@ Das Projekt lief nach zwei Jahren nicht mehr. Diese Fehler wurden gefunden und b
 | Upload brauchte eine offene Regel | Hochgeladen wurde mit dem öffentlichen anon key, dafür musste jeder in den Bucket schreiben dürfen. | Upload nur auf dem Server mit dem geheimen Service-Key, keine offene Upload-Regel mehr. |
 | Kaputtes Profilbild für Gäste, toter Link | `/user.png` existierte nicht. „My Reservations“ führte auf eine 404-Seite. Platzhalter „Hello from search“ in der Navigation. | Vorhandenes Platzhalterbild, Link und Platzhalter entfernt. |
 
-**Noch offen:** `npm audit` meldet Hinweise in Tailwind CSS 3 (Abhängigkeiten `picomatch`, `glob`).
-Die laufen nur beim Bauen, nicht auf dem Server. Weg gehen sie erst mit Tailwind 4, das wäre
-ein Umbau aller Styles.
+## Eigene Erweiterungen (2026)
+
+Alles ab hier ist nicht aus dem Tutorial, sondern selbst gebaut.
+
+| Thema | Umsetzung | Warum so |
+| --- | --- | --- |
+| Doppelbuchungen | Prüfen und Speichern in **einer** Transaktion mit Isolationsstufe `Serializable` (`createReservation`). | Klicken zwei Gäste gleichzeitig auf „Reserve“, gewinnt nur einer. Der andere bekommt eine Meldung statt einer Doppelbuchung. |
+| Datumswerte | Reisedaten reisen als Text `YYYY-MM-DD` und liegen in Postgres als `DATE` (`lib/dates.ts`). | Mit Uhrzeiten verschiebt die Zeitzone einen Tag (1. März 00:00 in Zürich = 28. Februar in UTC). |
+| Verfügbarkeit | Überschneidung = bestehende Buchung beginnt vor meinem Check-out und endet nach meinem Check-in. | Am Check-out-Tag darf die nächste Buchung beginnen, wie bei Airbnb. |
+| Suche in der URL | `?country=CH&checkIn=…&checkOut=…&guests=2`, auf dem Server geprüft (`parseSearch`). | Teilbare Links, Zurück-Knopf funktioniert, ungültige Werte werden ignoriert statt zu crashen. |
+| Datenmodell | Gäste/Zimmer/Bäder von Text zu Zahl, neue Tabelle `Reservation`, `ON DELETE CASCADE`. Migration von Hand geschrieben. | `prisma migrate diff` hätte die Spalten gelöscht und neu angelegt (Datenverlust). Die Migration wurde gegen eine Kopie der alten Struktur getestet. |
+| Login-Rücksprung | Nach dem Login zurück zum Inserat (`?next=` in `/api/auth/creation`), nur eigene Pfade erlaubt. | Sonst landet man nach „Log in to reserve“ auf der Startseite. Die Prüfung verhindert einen Open Redirect. |
+| Datenschutz | Gäste bekommen keine Favoriten-IDs anderer User mehr ins HTML. | Vorher lud die Startseite für Gäste die Favoriten aller User (`where: { userId: undefined }` filtert nicht). |
+| Formulare | Fehler erscheinen im Formular (`useActionState`), Lösch- und Storno-Knöpfe fragen nach. Kategorie-Karten sind echte Buttons. | Bessere Rückmeldung und mit Tastatur bedienbar. |
+
+**Noch offen / Ideen:** Bewertungen nach einem Aufenthalt, mehrere Fotos pro Inserat,
+Zahlung im Stripe-Testmodus. `npm audit` meldet noch Hinweise in Tailwind CSS 3
+(`picomatch`, `glob`). Die laufen nur beim Bauen, nicht auf dem Server, und gehen erst mit
+Tailwind 4 weg.
