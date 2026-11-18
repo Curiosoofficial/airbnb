@@ -1,8 +1,14 @@
+import HomeActions from "@/components/HomeActions";
 import ListingCard from "@/components/ListingCard";
 import NoItems from "@/components/NoItems";
 import prisma from "@/db/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "My Listings | Airbnb-Klon",
+};
 
 async function getData(userId: string) {
   const data = await prisma.home.findMany({
@@ -14,6 +20,7 @@ async function getData(userId: string) {
     },
     select: {
       id: true,
+      title: true,
       country: true,
       photo: true,
       description: true,
@@ -40,18 +47,19 @@ const page = async () => {
   }
   const data = await getData(user.id);
   return (
-    <section className="container mx-auto px-5 lg:px-10 mt-10">
+    <section className="container mx-auto px-5 lg:px-10 mt-10 mb-20">
       <h2 className="text-3xl font-semibold tracking-tight max-lg:text-xl">
         Your Homes
       </h2>
 
       {data.length === 0 ? (
-            <NoItems title="You dont have any Homes listed" description="Please add a Home to see them here"/>
+            <NoItems title="You don't have any homes listed" description="Please add a home to see it here"/>
         ): (
             <div className="grid lg:grid-cols-4 sm:grid-cols-2 md:grid-cols-3 grid-cols-1 gap-8 mt-8">
                 {data.map((item) => (
-                    <ListingCard 
-                        key={item.id}
+                  <div key={item.id}>
+                    <ListingCard
+                        title={item.title}
                         description={item.description as string}
                         location={item.country as string}
                         pathName="/my-homes"
@@ -60,8 +68,10 @@ const page = async () => {
                         price={item?.price as number}
                         userId={user.id}
                         favoriteId={item.Favorite[0]?.id as string}
-                        isInFavoriteList={item.Favorite.length as number > 0 ? true : false}
+                        isInFavoriteList={item.Favorite.length > 0}
                     />
+                    <HomeActions homeId={item.id}/>
+                  </div>
                 ))}
             </div>
         )}

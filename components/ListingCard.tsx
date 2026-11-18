@@ -1,15 +1,19 @@
 import { getCountryByValue } from "@/lib/getCountries";
 import { getImageUrl } from "@/lib/imageUrl";
+import { formatPrice } from "@/lib/format";
 
 import Image from "next/image";
 import Link from "next/link";
+import { Heart } from "lucide-react";
 
 import AddToFavoriteButton from "./AddToFavoriteButton";
 import { addToFavorite, deleteFromFavorite } from "@/lib/actions/actions";
 import DeleteFromFavoriteButton from "./DeleteFromFavoriteButton";
+import { Button } from "./ui/button";
 
 interface IAppProps {
   imagePath: string;
+  title?: string | null;
   description: string;
   location: string;
   price: number;
@@ -22,6 +26,7 @@ interface IAppProps {
 
 const ListingCard = ({
   imagePath,
+  title,
   description,
   location,
   price,
@@ -34,48 +39,51 @@ const ListingCard = ({
     const country = getCountryByValue(location);
 
   return (
-    <div className="flex flex-col">
-      <div className="relative h-72">
-        <Image
-          src={getImageUrl(imagePath)}
-          alt="Listing Image"
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="rounded-lg h-full object-cover mb-3"
-        />
+    <div className="flex flex-col group">
+      <div className="relative h-72 overflow-hidden rounded-xl">
+        {/* Auch das Bild führt zum Inserat (vorher nur der Text darunter) */}
+        <Link href={`/home/${homeId}`} aria-label={title ?? country?.label ?? "Open listing"}>
+          <Image
+            src={getImageUrl(imagePath)}
+            alt={title ?? "Listing Image"}
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </Link>
 
-        {userId && (
-          <div className="z-10 absolute top-2 right-2">
-            {isInFavoriteList ? (
-              <form action={deleteFromFavorite}>
-                <input type="hidden" name="favoriteId" value={favoriteId}/>
-                <input type="hidden" name="pathName" value={pathName}/>
-                <DeleteFromFavoriteButton/>
-              </form>
-            ): (
-              <form action={addToFavorite}>
-                <input type="hidden" name="homeId" value={homeId}/>
-                <input type="hidden" name="pathName" value={pathName}/>
-                <AddToFavoriteButton/>
-              </form>
-            )}
-          </div>
-        )}
+        <div className="z-10 absolute top-2 right-2">
+          {!userId ? (
+            // Gäste sehen das Herz auch. Klick führt zum Login und danach zurück.
+            <Button asChild variant="outline" size="icon" className="bg-primary-foreground">
+              <a href={`/api/auth/login?post_login_redirect_url=${encodeURIComponent(`/api/auth/creation?next=${pathName}`)}`} aria-label="Log in to save">
+                <Heart className="size-4"/>
+              </a>
+            </Button>
+          ) : isInFavoriteList ? (
+            <form action={deleteFromFavorite}>
+              <input type="hidden" name="favoriteId" value={favoriteId}/>
+              <input type="hidden" name="pathName" value={pathName}/>
+              <DeleteFromFavoriteButton/>
+            </form>
+          ): (
+            <form action={addToFavorite}>
+              <input type="hidden" name="homeId" value={homeId}/>
+              <input type="hidden" name="pathName" value={pathName}/>
+              <AddToFavoriteButton/>
+            </form>
+          )}
+        </div>
       </div>
 
 
-      <Link href={`/home/${homeId}`}>
+      <Link href={`/home/${homeId}`} className="mt-3">
         <h3 className="font-medium text-base">{country?.flag} {country?.label}</h3>
-        <p className="text-muted-foreground text-sm line-clamp-2">{description}</p>
-        <p className="pt-2 text-muted-foreground"><span className="font-medium text-black">${price}</span> / Night</p>
+        <p className="text-muted-foreground text-sm line-clamp-1">{title || description}</p>
+        <p className="pt-1 text-muted-foreground"><span className="font-medium text-foreground">{formatPrice(price)}</span> night</p>
       </Link>
     </div>
   );
 };
 
 export default ListingCard;
-
-
-
-
-
