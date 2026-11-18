@@ -14,8 +14,14 @@ const LazyMap = dynamic(() => import("@/components/Map"), {
   loading: () => <Skeleton className="h-[50vh] w-full" />,
 })
 
-const HomeMap = ({ locationValue }: { locationValue: string }) => {
-  return <LazyMap locationValue={locationValue} />
+interface Props {
+  locationValue: string
+  latitude?: number | null
+  longitude?: number | null
+}
+
+const HomeMap = ({ locationValue, latitude, longitude }: Props) => {
+  return <LazyMap locationValue={locationValue} latitude={latitude} longitude={longitude} />
 }
 
 export default HomeMap

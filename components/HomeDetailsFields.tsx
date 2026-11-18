@@ -1,3 +1,4 @@
+import { amenities } from "@/constants/amenities"
 import Counter from "./Counter"
 import { Card, CardHeader } from "./ui/card"
 import { Input } from "./ui/input"
@@ -12,6 +13,7 @@ interface Props {
     guests?: number | null
     bedrooms?: number | null
     bathrooms?: number | null
+    amenities?: string[]
   }
   // Beim Erstellen ist ein Bild Pflicht, beim Bearbeiten optional
   imageRequired?: boolean
@@ -61,6 +63,30 @@ const HomeDetailsFields = ({ defaults = {}, imageRequired = true }: Props) => {
           ))}
         </CardHeader>
       </Card>
+
+      {/* Ausstattung: normale Checkboxen mit gleichem Namen. Der Server liest sie
+          mit formData.getAll("amenities") als Liste. Kein JavaScript nötig. */}
+      <fieldset className="flex flex-col gap-y-3">
+        <legend className="mb-3 font-medium">What does your place offer?</legend>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {amenities.map((amenity) => (
+            <label
+              key={amenity.id}
+              className="flex cursor-pointer items-center gap-x-3 rounded-lg border p-3 text-sm transition-colors hover:border-foreground/40 has-[:checked]:border-2 has-[:checked]:border-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+            >
+              <input
+                type="checkbox"
+                name="amenities"
+                value={amenity.id}
+                defaultChecked={defaults.amenities?.includes(amenity.id)}
+                className="sr-only"
+              />
+              <amenity.icon className="size-5 shrink-0"/>
+              {amenity.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
     </div>
   )
 }

@@ -31,14 +31,23 @@ Bezahlt wird nichts, es ist eine Demo.
 
 ## Funktionen
 
-- **Suche** wie bei Airbnb: Land, Reisedaten und Gäste. Nur Unterkünfte, die im gewählten
-  Zeitraum frei sind und genug Platz haben. Die Suche steht in der URL und lässt sich als Link teilen.
+- **Suche** wie bei Airbnb: Ort, Land oder Name frei eintippen, mit Vorschlägen beim Tippen
+  (auch „Schweiz“, „Suisse“, „Italien“). Dazu Reisedaten und Gäste: Es erscheinen nur Unterkünfte,
+  die im Zeitraum frei sind und genug Platz haben. Die Suche steht in der URL und lässt sich teilen.
+- **Filter und Sortierung**: Preisspanne, Zimmer, Bäder, Ausstattung (WLAN, Pool, Kamin …),
+  sortiert nach Preis oder Bewertung
 - **Kategorien** (Beach, Pool, Tiny Home …) kombinierbar mit der Suche
 - **Kartenansicht** mit Preis-Schildern und Vorschau, umschaltbar mit „Show map“ / „Show list“
 - **Buchen**: Kalender mit belegten Tagen, Gästezahl, Preisberechnung, Schutz vor Doppelbuchungen
+- **Bewertungen**: 1 bis 5 Sterne plus Text nach dem Aufenthalt, Schnitt auf Karten, Detailseite
+  und Gastgeber-Profil
+- **Detailseite** mit Ausstattung („What this place offers“), ungefährer Lage auf der Karte,
+  Teilen und Merken
+- **Gastgeber-Profil** mit allen Inseraten, Bewertungsschnitt und Bewertungen
 - **My Trips**: kommende und vergangene Reisen, Stornieren vor Reisebeginn,
   dazu für Gastgeber die Buchungen auf den eigenen Inseraten
-- **Inserieren** in drei Schritten (Kategorie → Beschreibung, Preis, Foto → Land mit Karte),
+- **Inserieren** in drei Schritten (Kategorie → Beschreibung, Preis, Foto, Ausstattung →
+  Ort per Adresssuche),
   danach **bearbeiten** oder **löschen** (gesperrt, solange Gäste gebucht haben)
 - **Favoriten** speichern und entfernen
 - Login mit Kinde (Google oder E-Mail), danach zurück auf die Seite, auf der man war
@@ -53,7 +62,7 @@ Bezahlt wird nichts, es ist eine Demo.
 | Datenbank | PostgreSQL bei Supabase, Prisma ORM |
 | Bilder | Supabase Storage |
 | Login | Kinde (`@kinde-oss/kinde-auth-nextjs`) |
-| Karten | Leaflet / react-leaflet, Länderdaten aus `world-countries` |
+| Karten | Leaflet / react-leaflet, Adresssuche mit [Photon](https://photon.komoot.io) (OpenStreetMap), Länderdaten aus `world-countries` |
 | Kalender | react-day-picker, date-fns |
 | Hosting | Vercel (Region Frankfurt), täglicher Cron-Job gegen das Pausieren der Gratis-Datenbank |
 
@@ -179,6 +188,10 @@ Alles ab hier ist nicht aus dem Tutorial, sondern selbst gebaut.
 | Datenmodell | Gäste/Zimmer/Bäder von Text zu Zahl, neue Tabelle `Reservation`, `ON DELETE CASCADE`. Migration von Hand geschrieben. | `prisma migrate diff` hätte die Spalten gelöscht und neu angelegt (Datenverlust). Die Migration wurde gegen eine Kopie der alten Struktur getestet. |
 | Login-Rücksprung | Nach dem Login zurück zum Inserat (`?next=` in `/api/auth/creation`), nur eigene Pfade erlaubt. | Sonst landet man nach „Log in to reserve“ auf der Startseite. Die Prüfung verhindert einen Open Redirect. |
 | Datenschutz | Gäste bekommen keine Favoriten-IDs anderer User mehr ins HTML. | Vorher lud die Startseite für Gäste die Favoriten aller User (`where: { userId: undefined }` filtert nicht). |
+| Freitext-Suche | `/api/places` liefert Vorschläge: Orte aus den Inseraten, Länder über alle Übersetzungen und Schreibweisen (`lib/countrySearch.ts`, nur auf dem Server), passende Unterkünfte. Debounce und `AbortController` im Eingabefeld. | Vorher gab es nur ein Dropdown mit 250 Ländern. Veraltete Antworten können keine neueren überschreiben. |
+| Adresssuche | Ort beim Inserieren per Photon-Geocoder, gespeichert werden Ort, Land und Koordinaten, auf ca. 1 km gerundet. Die Karte zeigt einen Kreis statt eines Pins. | Wie bei Airbnb: Gäste sehen die ungefähre Lage, nicht die Haustür. |
+| Bewertungen | Eine Bewertung pro Aufenthalt (`reservationId` ist `@unique`), erst nach dem Check-out. Schnitt für viele Inserate in **einer** Abfrage (`groupBy`). | Nur wer wirklich dort war, darf bewerten. Kein N+1-Problem auf der Startseite. |
+| Bundle-Grösse | Im Browser eine kompakte Länderliste (24 KB, `scripts/build-countries.mjs`) statt des ganzen Pakets `world-countries` (512 KB). | Länderauswahl und Karten laufen im Browser, vorher landete alles im JavaScript-Bundle. |
 | Formulare | Fehler erscheinen im Formular (`useActionState`), Lösch- und Storno-Knöpfe fragen nach. Kategorie-Karten sind echte Buttons. | Bessere Rückmeldung und mit Tastatur bedienbar. |
 
 **Noch offen / Ideen:** Bewertungen nach einem Aufenthalt, mehrere Fotos pro Inserat,

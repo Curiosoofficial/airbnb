@@ -1,10 +1,10 @@
 import { getCountryByValue } from "@/lib/getCountries";
 import { getImageUrl } from "@/lib/imageUrl";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatRating } from "@/lib/format";
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 
 import AddToFavoriteButton from "./AddToFavoriteButton";
 import { addToFavorite, deleteFromFavorite } from "@/lib/actions/actions";
@@ -16,6 +16,8 @@ interface IAppProps {
   title?: string | null;
   description: string;
   location: string;
+  city?: string | null;
+  rating?: { average: number; count: number } | null;
   price: number;
   userId: string | undefined;
   isInFavoriteList: boolean;
@@ -29,6 +31,8 @@ const ListingCard = ({
   title,
   description,
   location,
+  city,
+  rating,
   price,
   userId,
   isInFavoriteList,
@@ -78,7 +82,13 @@ const ListingCard = ({
 
 
       <Link href={`/home/${homeId}`} className="mt-3">
-        <h3 className="font-medium text-base">{country?.flag} {country?.label}</h3>
+        <div className="flex items-start justify-between gap-x-2">
+          <h3 className="font-medium text-base truncate">{country?.flag} {city ? `${city}, ` : ""}{country?.label}</h3>
+          <span className="flex shrink-0 items-center gap-x-1 text-sm">
+            <Star className="size-3 fill-foreground"/>
+            {rating ? <>{formatRating(rating.average)} <span className="text-muted-foreground">({rating.count})</span></> : "New"}
+          </span>
+        </div>
         <p className="text-muted-foreground text-sm line-clamp-1">{title || description}</p>
         <p className="pt-1 text-muted-foreground"><span className="font-medium text-foreground">{formatPrice(price)}</span> night</p>
       </Link>

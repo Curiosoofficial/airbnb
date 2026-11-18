@@ -31,6 +31,10 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
       bathrooms: true,
       categoryName: true,
       country: true,
+      city: true,
+      latitude: true,
+      longitude: true,
+      amenities: true,
       photo: true,
     },
   });

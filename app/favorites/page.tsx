@@ -1,6 +1,7 @@
 import ListingCard from "@/components/ListingCard";
 import NoItems from "@/components/NoItems";
 import prisma from "@/db/db";
+import { getRatings } from "@/lib/reviews";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -25,6 +26,7 @@ async function getData(userId: string) {
           title: true,
           price: true,
           country: true,
+          city: true,
           description: true,
         },
       },
@@ -44,6 +46,7 @@ const page = async () => {
     redirect("/");
   }
   const data = await getData(user.id);
+  const ratings = await getRatings(data.flatMap((item) => (item.Home ? [item.Home.id] : [])));
 
 
   return (
@@ -59,6 +62,8 @@ const page = async () => {
                         title={item.Home?.title}
                         description={item.Home?.description as string}
                         location={item.Home?.country as string}
+                        city={item.Home?.city}
+                        rating={ratings.get(item.Home?.id ?? "") ?? null}
                         pathName="/favorites"
                         homeId={item.Home?.id as string}
                         imagePath={item.Home?.photo as string}

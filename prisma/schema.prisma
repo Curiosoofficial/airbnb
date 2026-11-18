@@ -23,6 +23,7 @@ model User {
   Home        Home[]
   Favorite    Favorite[]
   Reservation Reservation[]
+  Review      Review[]
 }
 
 model Home {
@@ -35,11 +36,19 @@ model Home {
   bedrooms     Int?
   bathrooms    Int?
   country      String?
+  // Genauer Ort (Stadt/Dorf) und Koordinaten aus der Adresssuche im Inserat.
+  // Ältere Inserate haben nur ein Land, dann zeigt die Karte die Landesmitte.
+  city         String?
+  latitude     Float?
+  longitude    Float?
+  // Ausstattung als Liste von IDs, z. B. ["wifi", "pool"] (siehe constants/amenities.ts)
+  amenities    String[]      @default([])
   photo        String?
   price        Int?
   categoryName String?
   Favorite     Favorite[]
   Reservation  Reservation[]
+  Review       Review[]
 
   addedCategory    Boolean @default(false)
   addedDescription Boolean @default(false)
@@ -79,5 +88,26 @@ model Reservation {
   Home   Home?   @relation(fields: [homeId], references: [id], onDelete: Cascade)
   homeId String?
 
+  Review Review?
+
   @@index([homeId, startDate, endDate])
+}
+
+model Review {
+  id String @id @default(uuid())
+
+  rating  Int // 1 bis 5 Sterne
+  comment String
+
+  createdAt DateTime @default(now())
+
+  User          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId        String?
+  Home          Home?        @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  homeId        String?
+  // Eine Bewertung pro Aufenthalt: nur wer wirklich dort war, darf bewerten
+  Reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  reservationId String?      @unique
+
+  @@index([homeId])
 }

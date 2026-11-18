@@ -2,8 +2,9 @@
 
 import prisma from "@/db/db";
 import { getSupabase } from "@/db/supabase";
+import { cleanAmenities } from "@/constants/amenities";
 import { categoryItems } from "@/constants/categoryItems";
-import { countNights, dateKeyToDb, fromDateKey, toDateKey } from "@/lib/dates";
+import { countNights, dateKeyToDb, dbToDateKey, fromDateKey, toDateKey } from "@/lib/dates";
 import { getCountryByValue } from "@/lib/getCountries";
 import type { FormState } from "@/lib/types";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -50,6 +51,36 @@ function readInt(formData: FormData, name: string, min: number, max: number) {
 
 function isValidCategory(name: string | null) {
   return categoryItems.some((item) => item.name === name);
+}
+
+// Ort aus der Adresssuche (LocationPicker). Koordinaten werden auf zwei
+// Nachkommastellen gerundet (ca. 1 km): Die genaue Adresse eines Gastgebers
+// soll nicht in der Datenbank und nicht öffentlich auf der Karte stehen.
+function readLocation(formData: FormData) {
+  const city = readText(formData, "city", 80);
+  const country = String(formData.get("countryValue") ?? "");
+  const latitude = Number(formData.get("latitude"));
+  const longitude = Number(formData.get("longitude"));
+
+  const valid =
+    city &&
+    getCountryByValue(country) &&
+    formData.get("latitude") !== "" &&
+    Number.isFinite(latitude) && Math.abs(latitude) <= 90 &&
+    Number.isFinite(longitude) && Math.abs(longitude) <= 180;
+
+  if (!valid) return null;
+
+  return {
+    city,
+    country,
+    latitude: Math.round(latitude * 100) / 100,
+    longitude: Math.round(longitude * 100) / 100,
+  };
+}
+
+function readAmenities(formData: FormData) {
+  return cleanAmenities(formData.getAll("amenities").map(String));
 }
 
 async function uploadImage(imageFile: File) {
@@ -192,6 +223,7 @@ export async function createDescriptionPage(formData: FormData) {
       bathrooms,
       guests,
       photo,
+      amenities: readAmenities(formData),
       addedDescription: true,
     },
   });
@@ -202,9 +234,10 @@ export async function createDescriptionPage(formData: FormData) {
 export async function createLocationPage(formData: FormData) {
   const userId = await requireUserId();
   const homeId = formData.get("homeId") as string;
-  const countryValue = formData.get("countryValue") as string;
+  const location = readLocation(formData);
 
-  if (!getCountryByValue(countryValue)) {
+  // Kein Ort aus der Liste gewählt: zurück zum Schritt
+  if (!location) {
     return redirect(`/create/${homeId}/location`);
   }
 
@@ -215,7 +248,7 @@ export async function createLocationPage(formData: FormData) {
     },
     data: {
       addedLocation: true,
-      country: countryValue,
+      ...location,
     },
   });
 
@@ -248,7 +281,7 @@ export async function updateHome(
   const bedrooms = readInt(formData, "room", 1, MAX_COUNT);
   const bathrooms = readInt(formData, "bathroom", 1, MAX_COUNT);
   const categoryName = String(formData.get("categoryName") ?? "");
-  const country = String(formData.get("countryValue") ?? "");
+  const location = readLocation(formData);
   const imageFile = formData.get("image") as File | null;
 
   if (!title || !description) {
@@ -263,8 +296,8 @@ export async function updateHome(
   if (!isValidCategory(categoryName)) {
     return { error: "Please choose a category." };
   }
-  if (!getCountryByValue(country)) {
-    return { error: "Please choose a country." };
+  if (!location) {
+    return { error: "Please search for a place and pick it from the list." };
   }
 
   // Neues Bild ist optional. Ohne Auswahl bleibt das alte.
@@ -287,7 +320,8 @@ export async function updateHome(
       bedrooms,
       bathrooms,
       categoryName,
-      country,
+      ...location,
+      amenities: readAmenities(formData),
       photo,
     },
   });
@@ -495,4 +529,56 @@ export async function cancelReservation(formData: FormData) {
   });
 
   revalidatePath("/reservations");
+}
+
+// ─── Bewertungen ────────────────────────────────────────────────────────────
+
+export async function createReview(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const userId = await requireUserId("/reservations");
+  const reservationId = String(formData.get("reservationId") ?? "");
+  const rating = readInt(formData, "rating", 1, 5);
+  const comment = readText(formData, "comment", 1000);
+
+  if (!rating) {
+    return { error: "Please choose between 1 and 5 stars." };
+  }
+  if (!comment || comment.length < 10) {
+    return { error: "Please write at least one short sentence." };
+  }
+
+  // Nur eigene Buchungen, und erst nach dem Check-out
+  const reservation = await prisma.reservation.findFirst({
+    where: { id: reservationId, userId },
+    select: { homeId: true, endDate: true, Review: { select: { id: true } } },
+  });
+
+  if (!reservation?.homeId) {
+    return { error: "Reservation not found." };
+  }
+  if (dbToDateKey(reservation.endDate) > toDateKey(new Date())) {
+    return { error: "You can review your stay after checkout." };
+  }
+  if (reservation.Review) {
+    return { error: "You already reviewed this stay." };
+  }
+
+  try {
+    await prisma.review.create({
+      data: { rating, comment, userId, homeId: reservation.homeId, reservationId },
+    });
+  } catch (error) {
+    // Doppelklick: reservationId ist eindeutig (@unique), der zweite Versuch scheitert
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { error: "You already reviewed this stay." };
+    }
+    throw error;
+  }
+
+  revalidatePath("/reservations");
+  revalidatePath(`/home/${reservation.homeId}`);
+  revalidatePath("/");
+  return { ok: true };
 }

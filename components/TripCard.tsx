@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
 import ConfirmSubmit from "./ConfirmSubmit"
+import ReviewForm from "./ReviewForm"
+import Stars from "./Stars"
 
 interface Props {
   reservationId: string
@@ -20,10 +22,14 @@ interface Props {
   guests: number
   totalPrice: number
   canCancel: boolean
+  // Vergangene Reise: bewerten (oder eigene Bewertung anzeigen)
+  canReview?: boolean
+  myRating?: number | null
+  city?: string | null
   highlight?: boolean
 }
 
-const TripCard = ({ reservationId, homeId, title, photo, country, hostName, startKey, endKey, guests, totalPrice, canCancel, highlight }: Props) => {
+const TripCard = ({ reservationId, homeId, title, photo, country, hostName, startKey, endKey, guests, totalPrice, canCancel, canReview, myRating, city, highlight }: Props) => {
   const countryInfo = getCountryByValue(country)
   const nights = countNights(startKey, endKey)
 
@@ -42,12 +48,22 @@ const TripCard = ({ reservationId, homeId, title, photo, country, hostName, star
       <div className="flex flex-1 flex-col gap-y-1">
         <Link href={`/home/${homeId}`} className="font-medium hover:underline">{title}</Link>
         <p className="text-sm text-muted-foreground">
-          {countryInfo?.flag} {countryInfo?.label} &middot; Hosted by {hostName}
+          {countryInfo?.flag} {city ? `${city}, ` : ""}{countryInfo?.label} &middot; Hosted by {hostName}
         </p>
         <p className="mt-2 font-medium">{formatDateRange(startKey, endKey)}</p>
         <p className="text-sm text-muted-foreground">
           {plural(nights, "night")} &middot; {plural(guests, "guest")} &middot; {formatPrice(totalPrice)} total
         </p>
+
+        {myRating ? (
+          <p className="mt-auto flex items-center gap-x-2 pt-3 text-sm text-muted-foreground">
+            Your rating <Stars rating={myRating}/>
+          </p>
+        ) : canReview ? (
+          <div className="mt-auto pt-3">
+            <ReviewForm reservationId={reservationId}/>
+          </div>
+        ) : null}
 
         {canCancel && (
           <form action={cancelReservation} className="mt-auto pt-3">

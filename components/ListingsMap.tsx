@@ -14,16 +14,23 @@ export interface MapListing {
   title: string;
   price: number;
   country: string;
+  latitude?: number | null;
+  longitude?: number | null;
   imageUrl: string;
 }
 
-// Inserate kennen nur ihr Land, keine genaue Adresse. Mehrere Inserate im
-// selben Land würden genau aufeinander liegen. Darum werden sie spiralförmig
-// leicht versetzt (goldener Winkel), damit jedes Preis-Schild klickbar bleibt.
+// Neuere Inserate haben Koordinaten (Adresssuche), ältere nur ein Land.
+// Ohne Koordinaten würden mehrere Inserate im selben Land genau aufeinander
+// liegen. Darum werden sie spiralförmig leicht versetzt (goldener Winkel),
+// damit jedes Preis-Schild klickbar bleibt.
 function spreadPositions(listings: MapListing[]) {
   const seen = new Map<string, number>();
 
   return listings.flatMap((listing) => {
+    if (typeof listing.latitude === "number" && typeof listing.longitude === "number") {
+      return [{ listing, position: [listing.latitude, listing.longitude] as LatLngTuple }];
+    }
+
     const center = getCountryByValue(listing.country)?.latLang;
     if (!center || center.length < 2) return [];
 
