@@ -32,5 +32,11 @@ export async function GET(request: NextRequest) {
 
   // Relativ zur aktuellen Domain weiterleiten. Vorher stand hier fest
   // "http://localhost:3000/", das funktioniert auf Vercel nicht.
-  return NextResponse.redirect(new URL("/", request.url));
+  // `next`: Seite, auf der man vor dem Login war (z. B. ein Inserat beim Buchen).
+  // Nur eigene Pfade wie "/home/123" erlaubt, sonst könnte jemand einen Link
+  // bauen, der nach dem Login auf eine fremde Seite weiterleitet (Open Redirect).
+  const next = request.nextUrl.searchParams.get("next");
+  const target = next && /^\/(?!\/)/.test(next) && !next.includes("\\") ? next : "/";
+
+  return NextResponse.redirect(new URL(target, request.url));
 }

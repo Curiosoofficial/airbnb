@@ -1,12 +1,16 @@
 import countries from "world-countries"
 
-const countriesFormatted = countries.map((item) => ({
-    value: item.cca2,
-    label: item.name.common,
-    flag: item.flag,
-    latLang: item.latlng,
-    region: item.region,
-}))
+// Alphabetisch nach Namen sortiert. Vorher war die Liste nach Ländercode
+// sortiert, darum stand "Aruba" zuoberst und die Schweiz irgendwo in der Mitte.
+const countriesFormatted = countries
+    .map((item) => ({
+        value: item.cca2,
+        label: item.name.common,
+        flag: item.flag,
+        latLang: item.latlng,
+        region: item.region,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "en"))
 
 export const getAllCountries = () => countriesFormatted
 

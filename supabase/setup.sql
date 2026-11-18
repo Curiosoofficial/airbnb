@@ -18,3 +18,4 @@ on conflict (id) do nothing;
 alter table "User" enable row level security;
 alter table "Home" enable row level security;
 alter table "Favorite" enable row level security;
+alter table "Reservation" enable row level security;
