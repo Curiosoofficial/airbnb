@@ -21,9 +21,11 @@ Unterkunft in drei Schritten ein.
 | **Kartenansicht** | **My Trips** |
 | ![Karte mit Preis-Schildern und Vorschau](docs/screenshots/karte.jpg) | ![Gebuchte Reise und Buchungen auf eigenen Inseraten](docs/screenshots/meine-reisen.jpg) |
 
-Die Inserate wurden über das normale Formular der App angelegt, die Fotos stammen
-von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Gastgeber Marco, Mia und Sofia und
-ihre Buchungen sind Demo-Daten, damit man belegte Tage und die Gastgeber-Sicht sieht.
+Die Demo hat 29 Inserate, mindestens zwei pro Kategorie. Die ersten acht wurden über das
+normale Formular der App angelegt, die übrigen als Demo-Daten direkt in der Datenbank.
+Alle Fotos stammen von [Unsplash](https://unsplash.com) (Unsplash-Lizenz). Die Gastgeber
+ausser Luka (Marco, Mia, Sofia, Noah, Elena, Jonas, Camille, Liam) und ihre Buchungen sind
+erfunden, damit man belegte Tage und die Gastgeber-Sicht sieht.
 Zum Buchen, Speichern und Inserieren braucht es ein Login (Google oder E-Mail über Kinde).
 Bezahlt wird nichts, es ist eine Demo.
 
